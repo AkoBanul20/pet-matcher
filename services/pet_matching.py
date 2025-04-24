@@ -66,8 +66,8 @@ class PetMatchingService(object):
             reported_pet = self.payload.get("report_image_url")
 
             result = matcher.compare_pet_images(
-                lost_pet_image_path=lost_pet.lstrip("/"),
-                reported_image_path=reported_pet.lstrip("/"),
+                lost_pet_image_path=lost_pet,
+                reported_image_path=reported_pet,
                 )
             
             try:
