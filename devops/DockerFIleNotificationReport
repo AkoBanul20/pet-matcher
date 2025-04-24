@@ -1,0 +1,30 @@
+# Use an official Python runtime as a parent image
+FROM python:3.8.20
+
+# Set the working directory in the container
+WORKDIR /app
+
+# Set environment variables
+ENV PYTHONUNBUFFERED=1
+ENV ENVIRONMENT=prod
+ENV QUEUE_NAME=PET_MATCHER
+
+# Install system dependencies
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends gcc \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+
+# Install Python dependencies
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+
+# Copy the rest of the application code into the container
+COPY . .
+
+RUN mkdir -p app/static/uploads/pets app/static/uploads/lost_pet_reports
+
+# Command to run the application
+CMD ["python", "main.py"]
