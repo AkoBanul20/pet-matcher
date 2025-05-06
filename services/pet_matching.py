@@ -21,6 +21,12 @@ class PetMatchingService(object):
     def pet_report_notif_send(self):
         try:
             payload = self.payload.get("payload")
+            
+            if not payload:
+                queue_type = self.payload.get("queue_type", None)
+                if queue_type:
+                    self.adoption_screening_notif_send(self.payload)
+                    return
             owner = payload.get("owner_details")
             owner_email = owner.get("email")
             print(owner_email)
@@ -58,6 +64,42 @@ class PetMatchingService(object):
             print(f"Error in sending of report notification :{e}")
 
         return
+    
+    def adoption_screening_notif_send(self, payload: dict):
+        try:
+            pet_image_url = f"https://qcacac.site/api{payload.get('pet_image_url')}"
+            schedule = payload.get("schedule")
+            pet_name = payload.get("pet_name")
+            # found_in = payload.get("found_in")
+            # additional_details = payload.get("additional_details")
+            email = payload.get("email")
+            subject =f"Schedule of Screening for Your Adoption Request"
+            body = f"""
+            ""
+            <html>
+                <body>
+                    <h2>Schedule of Screening for Your Adoption Request</h2>
+                    <p>Dear Soon-to-be Fur Parent,</p>
+                    <p>We are pleased to inform you that your adoption request has been scheduled for screening.:</p>
+                    <ul>
+                        <li><strong>Pet Name:</strong> {pet_name}</li>
+                        <li><strong>When:</strong> {schedule}</li>
+                        <li><strong>Where:</strong>Clemente St., Lupang Pangako, Payatas, Quezon City, Philippines</li>
+                    </ul>
+                    <p><img src="{pet_image_url}" alt="Pet Image" style="max-width: 300px; height: auto;"></p>
+                    <p>Please bring a QC ID or any valid ID. Thank you for using our service!</p>
+                    <p>Don't reply on this email. This a system generated email</p>
+                </body>
+            </html>
+                    """
+                
+            print("sending email....")
+            send_email(to_email=email, subject=subject, body=body)
+        except BaseException as e:
+            print(f"Error in sending of screening schedule :{e}")
+
+        return
+
 
     def pet_matching_image(self):
         try:
