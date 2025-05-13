@@ -1,4 +1,5 @@
 import json
+import requests 
 from utilities.redis import RedisHelper
 from extractor.pet_matcher import PetMatcher
 from utilities.email import send_email
@@ -124,12 +125,46 @@ class PetMatchingService(object):
                 "payload": self.payload,
             }
 
+            # if result['is_match']:
+
             self.redis_connection.sadd(NOTIFICATION_QUEUE,json.dumps(redis_result_data))
+            # add update api status here
+
+            report_id = self.payload.get("report_id")
+            if report_id:
+                self.status_matching_api_update(report_id, True)
+
             print("Successfully added to the queue")
         except BaseException as e:
             print(f"Error in pet matching.... {e}")
             self.redis_connection.sadd(PET_MATCHER_QUEUE, json.dumps(self.payload))
         return
         
+    def status_matching_api_update(self, report_id: int, is_matched: bool = True):
+        try:
+            url = f"https://qcacac.site/api/v1/lost-pet-report/{report_id}/match"
+            # url = f"http://127.0.0.1:8000/v1/lost-pet-report/{report_id}/match"
+            headers = {
+                'accept': 'application/json',
+                'Content-Type': 'application/json'
+            }
+            payload = {
+                'is_matched': is_matched
+            }
+
+            response = requests.patch(url, headers=headers, json=payload)
+            
+            if response.status_code == 200:
+                print(f"Successfully updated match status for report {report_id}")
+                return True
+            else:
+                print(f"Failed to update match status. Status code: {response.status_code}")
+                print(f"Response: {response.text}")
+                return False
+                
+        except Exception as e:
+            print(f"Error updating match status: {e}")
+            return False
+
 
 
