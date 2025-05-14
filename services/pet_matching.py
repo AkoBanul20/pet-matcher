@@ -26,7 +26,10 @@ class PetMatchingService(object):
             if not payload:
                 queue_type = self.payload.get("queue_type", None)
                 if queue_type:
-                    self.adoption_screening_notif_send(self.payload)
+                    if queue_type == "transfer_notification":
+                        self.transaction_coordination_notif_send(self.payload)
+                    else:
+                        self.adoption_screening_notif_send(self.payload)
                     return
             owner = payload.get("owner_details")
             owner_email = owner.get("email")
@@ -65,6 +68,34 @@ class PetMatchingService(object):
             print(f"Error in sending of report notification :{e}")
 
         return
+    
+    def transaction_coordination_notif_send(self, payload: dict):
+        try:
+            email = payload.get("email")
+            name = payload.get("name")
+            subject = f"Status of requested Transfer Coordination"
+            request_data = payload.get("request_data")
+            body = f"""
+            <html>
+                <body>
+                    <h2>You're request is been approved!</h2>
+                    <p>Dear Mr./Mrs. {name},</p>
+                    <p>We are pleased to inform you that your transfer coordinaton request has been approved.:</p>
+                    <ul>
+                        <li><strong>Barangay/Name:</strong>  {request_data.get('barangay_name')} </li>
+                        <li><strong>Address:</strong>  {request_data.get('address')} </li>
+                        <li><strong>Pet Type:</strong>  {request_data.get('pet_type')} </li>
+                        <li><strong>Requested Date:</strong>  {request_data.get('requested_date')} </li>
+                    </ul>
+                    <p>Please bring a QC ID or any valid ID. Thank you for using our service!</p>
+                    <p>Don't reply on this email. This a system generated email</p>
+                </body>
+            </html>
+            """
+            print("sending email....")
+            send_email(to_email=email, subject=subject, body=body)
+        except BaseException as e:
+            print("Error in sending transaction coordination")
     
     def adoption_screening_notif_send(self, payload: dict):
         try:
